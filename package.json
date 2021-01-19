@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/lyvewave/arduino-serial-data-viewer#readme",
   "dependencies": {
+    "@types/dom-serial": "^1.0.0",
     "bootstrap": "^4.5.3",
     "next": "^10.0.5",
     "react": "^17.0.1",
