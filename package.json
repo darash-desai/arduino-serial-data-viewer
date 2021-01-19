@@ -1,0 +1,38 @@
+{
+  "name": "arduino-serial-data-viewer",
+  "version": "0.1.0",
+  "description": "Arduino Serial Data Viewer",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyvewave/arduino-serial-data-viewer.git"
+  },
+  "author": "darash@lyvewave.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lyvewave/arduino-serial-data-viewer/issues"
+  },
+  "homepage": "https://github.com/lyvewave/arduino-serial-data-viewer#readme",
+  "dependencies": {
+    "bootstrap": "^4.5.3",
+    "next": "^10.0.5",
+    "react": "^17.0.1",
+    "react-bootstrap": "^1.4.3",
+    "react-dom": "^17.0.1",
+    "sass": "^1.32.4",
+    "typescript": "^4.1.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.14.0",
+    "@typescript-eslint/parser": "^4.14.0",
+    "eslint": "^7.18.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "eslint-plugin-react": "^7.22.0",
+    "prettier": "^2.2.1"
+  }
+}
