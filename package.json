@@ -19,9 +19,12 @@
   "homepage": "https://github.com/lyvewave/arduino-serial-data-viewer#readme",
   "dependencies": {
     "@types/dom-serial": "^1.0.0",
+    "ahooks": "^2.9.4",
+    "apexcharts": "^3.23.1",
     "bootstrap": "^4.5.3",
     "next": "^10.0.5",
     "react": "^17.0.1",
+    "react-apexcharts": "^1.3.7",
     "react-bootstrap": "^1.4.3",
     "react-dom": "^17.0.1",
     "sass": "^1.32.4",
