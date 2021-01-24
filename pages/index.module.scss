@@ -1,3 +1,73 @@
+@import "styles/theme";
+
 .Index {
-  color: blue;
+  margin-top: 40px;
+
+  h1 {
+    margin-left: 16px;
+  }
+
+  :global {
+    .card {
+      padding: 20px;
+      border: 1px solid $gray-100;
+    }
+
+    .row {
+      margin-bottom: 20px;
+    }
+  }
+
+  .chartArea {
+    padding-left: 0px;
+  }
+
+  .axisTitle {
+    font-weight: 500;
+    font-size: 1.2rem;
+    font-family: $title-font;
+  }
+
+  .controlPanel {
+    padding: 10px;
+    height: 100%;
+
+    .statusIndicator {
+      width: 100%;
+      margin-bottom: 24px;
+      font-family: $title-font;
+
+      :global {
+        .input-group-text {
+          border-radius: $btn-corner-radius;
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+          flex: 1;
+        }
+
+        .btn {
+          width: 120px;
+          padding: 0px 16px;
+        }
+      }
+
+      .statusLabel {
+        font-weight: 500;
+        margin-right: 16px;
+      }
+
+      .status {
+        font-weight: 500;
+        float: right;
+        display: inline-block;
+        text-transform: capitalize;
+      }
+    }
+  }
+
+  .statistics {
+    :global(.table) {
+      margin-top: 30px;
+    }
+  }
 }

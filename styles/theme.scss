@@ -1,0 +1,20 @@
+@import "./fonts";
+@import "./colors";
+
+@import "node_modules/bootstrap/scss/_functions";
+@import "node_modules/bootstrap/scss/_variables";
+
+$theme-colors: (
+  "primary": $teal,
+  "secondary": $orange,
+  "warning": $yellow,
+  "info": $lightTeal,
+  "danger": $red,
+);
+
+$background-color: $gray-100;
+$header-color: $gray-700;
+
+$corner-radius: 20px;
+$btn-corner-radius: 8px;
+$input-corner-radius: 10px;
