@@ -289,7 +289,7 @@ const Index = (): ReactElement => {
     document.body.removeChild(link);
   };
 
-  const calculateAverage = (): void => {
+  const calculateStatistics = (): void => {
     const entries = Array.from(series.entries()).sort(
       (e1, e2) => e1[1] - e2[1]
     );
@@ -373,10 +373,10 @@ const Index = (): ReactElement => {
                 Export to CSV
               </Button>
               <Button
-                onClick={calculateAverage}
+                onClick={calculateStatistics}
                 disabled={serialData.current.length === 0}
               >
-                Average
+                Statistics
               </Button>
             </Card.Body>
           </Card>
