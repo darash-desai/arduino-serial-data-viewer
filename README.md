@@ -1,5 +1,7 @@
 # Arduino Serial Data Viewer
 
+Visit the web tool here: [https://arduino-serial-data-viewer.vercel.app/](https://arduino-serial-data-viewer.vercel.app/)
+
 ## What is Arduino Serial Data Viewer?
 Arduino Serial Data Viewer was created in response to a lack of simple tools that enable rapid bootstrapping and development of data-centric Arduino projects. The core goals of this tool are to:
 1. Provide a simple means to visualize serial data output from an Arduino in real-time
