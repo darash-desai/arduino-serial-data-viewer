@@ -133,7 +133,7 @@ const Index = (): ReactElement => {
    */
   const series = useRef<Map<string, number>>(new Map()).current;
 
-  const [resetState, setResetState] = useState(false);
+  /** Stores a set of statistics generated for the current data set. */
   const [statistics, setStatistics] = useState<DataStats>([]);
 
   const { run: updateChartData } = useThrottleFn(
@@ -156,7 +156,7 @@ const Index = (): ReactElement => {
           }
 
           const seriesIndex = series.get(key);
-          if (seriesIndex) {
+          if (seriesIndex !== undefined) {
             chartData[seriesIndex].data.push({ x: index, y: data[key] });
           }
         });
@@ -249,7 +249,8 @@ const Index = (): ReactElement => {
         max: CHART_OPTIONS.xaxis.max,
       },
     });
-    setResetState(!resetState);
+
+    setStatistics([]);
   };
 
   const exportToCSV = (): void => {
