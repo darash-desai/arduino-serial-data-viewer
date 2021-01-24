@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useRef, useCallback } from "react";
+import React, { ReactElement, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 
 import Card from "react-bootstrap/Card";
@@ -10,18 +10,20 @@ import InputGroup from "react-bootstrap/InputGroup";
 import Table from "react-bootstrap/Table";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
-import type * as ApexChartsType from "apexcharts";
+import { exec } from "apexcharts";
 
 import { useThrottleFn } from "ahooks";
 import { useArduino } from "hooks/useArduino";
 import styles from "./index.module.scss";
 
-type DataSeries = { data: { x: number; y: number }[] }[];
+type DataSeries = { name?: string; data: { x: number; y: number }[] }[];
 type DataStats = { name: string; mean: number; stdev: number }[];
 
 declare global {
   interface Window {
-    ApexCharts: ApexChartsType;
+    ApexCharts: {
+      exec: typeof exec;
+    };
   }
 }
 
@@ -135,7 +137,7 @@ const Index = (): ReactElement => {
   const [statistics, setStatistics] = useState<DataStats>([]);
 
   const { run: updateChartData } = useThrottleFn(
-    useCallback((jsonString: string, index: number): void => {
+    (jsonString: string, index: number): void => {
       try {
         const data = JSON.parse(jsonString);
 
@@ -153,7 +155,10 @@ const Index = (): ReactElement => {
             });
           }
 
-          chartData[series.get(key)].data.push({ x: index, y: data[key] });
+          const seriesIndex = series.get(key);
+          if (seriesIndex) {
+            chartData[seriesIndex].data.push({ x: index, y: data[key] });
+          }
         });
 
         window.ApexCharts.exec("line-chart", "updateOptions", {
@@ -166,7 +171,7 @@ const Index = (): ReactElement => {
       } catch (error) {
         console.log("Error parsing data:", error);
       }
-    }),
+    },
     { wait: CHART_UPDATE_INTERVAL }
   );
 
@@ -202,7 +207,7 @@ const Index = (): ReactElement => {
     );
     entries.forEach((entry) => {
       highResData.push({
-        key: entry[0],
+        name: entry[0],
         data: [],
       });
     });
