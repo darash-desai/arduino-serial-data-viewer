@@ -183,9 +183,15 @@ const Index = (): ReactElement => {
     },
   });
 
-  const handleConnect = (): void => {
+  const handleConnect = async (): Promise<void> => {
     if (status === "connected") return;
-    connect(9600);
+
+    await connect(9600);
+
+    // Clear the current data if there is any
+    if (serialData.current.length > 0) {
+      handleClear();
+    }
 
     window.ApexCharts.exec("line-chart", "updateOptions", {
       chart: {
