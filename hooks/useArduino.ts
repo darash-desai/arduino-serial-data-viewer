@@ -6,7 +6,7 @@ let reader: ReadableStreamDefaultReader<string> | null = null;
 let outputStream: WritableStream<string> | null = null;
 let writingTask: Promise<void> | null = null;
 
-interface UseArduinoOptions {
+export interface UseArduinoOptions {
   /**
    * Callback function invoked when data is read from the serial.
    *
@@ -23,7 +23,7 @@ interface UseArduinoOptions {
   readDelimiter?: string;
 }
 
-type ArduinoStatus = "connected" | "disconnected";
+export type ArduinoStatus = "connected" | "disconnected";
 
 type UseArduinoResult = {
   connect: (baudRate: number) => Promise<void>;
