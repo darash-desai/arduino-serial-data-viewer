@@ -26,13 +26,35 @@ export interface UseArduinoOptions {
 export type ArduinoStatus = "connected" | "disconnected";
 
 type UseArduinoResult = {
+  /**
+   * Initiates a request to the user to choose a serial device to open a
+   * connection to.
+   *
+   * @param baudRate  The baud rate to use to establish communication.
+   */
   connect: (baudRate: number) => Promise<void>;
 
+  /**
+   * Disconnects from the currently connected device.
+   */
   disconnect: () => Promise<void>;
 
+  /**
+   * Sends data to the currently connected device.
+   *
+   * @param output  The data to send as a string.
+   */
   write: (output: string) => Promise<void>;
 
+  /**
+   * The current connection status.
+   */
   status: ArduinoStatus;
+
+  /**
+   * Determines whether any Arduino devices are available through web serial.
+   */
+  isAvailable: () => Promise<boolean>;
 };
 
 export function useArduino({
@@ -93,7 +115,9 @@ export function useArduino({
   const connect = async (baudRate: number): Promise<void> => {
     if (!navigator.serial || status === "connected" || port) return;
 
-    port = await navigator.serial.requestPort();
+    port = await navigator.serial.requestPort({
+      filters: [{ usbVendorId: 0x2341 }],
+    });
     await port.open({ baudRate });
 
     // Set up input stream to read data from the serial line. Only do this if
@@ -142,10 +166,20 @@ export function useArduino({
     setStatus("disconnected");
   };
 
+  const isAvailable = async (): Promise<boolean> => {
+    if (typeof navigator !== "undefined") {
+      const ports = await navigator.serial.getPorts();
+      return ports.length > 0;
+    }
+
+    return false;
+  };
+
   return {
     status,
     connect,
     disconnect,
     write,
+    isAvailable,
   };
 }

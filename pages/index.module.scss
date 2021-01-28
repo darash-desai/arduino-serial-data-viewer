@@ -1,3 +1,4 @@
+@use "sass:color";
 @import "styles/theme";
 
 .Index {
@@ -29,7 +30,7 @@
   }
 
   .controlPanel {
-    padding: 10px;
+    padding: 4px;
     height: 100%;
 
     .statusIndicator {
@@ -45,9 +46,72 @@
           flex: 1;
         }
 
-        .btn {
-          width: 120px;
+        .btn-group {
+          .btn:focus {
+            outline: none;
+            box-shadow: none;
+          }
+
+          :not(.dropdown-toggle-split).btn {
+            width: 92px;
+            min-width: unset;
+            padding-left: 14px;
+            padding-right: 8px;
+            text-align: left;
+          }
+
+          .dropdown-menu {
+            background-color: color.adjust($lightTeal, $lightness: 35%);
+            padding: 0;
+            border-radius: $btn-corner-radius;
+            overflow: hidden;
+
+            a {
+              padding-top: 1rem;
+              padding-bottom: 1rem;
+              padding-left: 32px;
+              border-top: 1px solid $gray-400;
+              font-size: 0.9375rem;
+              color: $gray-900;
+              position: relative;
+
+              &:first-child {
+                border-top: none;
+              }
+
+              &:hover:not(:local(.selected)) {
+                background-color: $teal;
+                color: white;
+              }
+
+              &:local(.selectedDevice) {
+                background-color: color.adjust($lightTeal, $lightness: 10%);
+
+                &:before {
+                  content: "•";
+                  color: color.adjust($teal, $lightness: -10%);
+                  font-size: 2.5rem;
+                  position: absolute;
+                  top: 0%;
+                  left: 8px;
+                  line-height: 3.25rem;
+                }
+              }
+            }
+          }
+        }
+
+        :not(.dropdown-toggle-split).btn {
+          width: 114px;
           padding: 0px 16px;
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+        }
+
+        .dropdown-toggle-split {
+          width: 30px;
+          min-width: unset;
+          padding: 0;
         }
       }
 

@@ -6,7 +6,7 @@ import io from "socket.io-client";
 import type { UseArduinoOptions, ArduinoStatus } from "./useArduino";
 
 /** Defnes type for devices returned by the Arduino Create Agent. */
-type ArduinoDevice = {
+export type ArduinoDevice = {
   Name: string;
   SerialNumber: string;
   DeviceClass: string;
@@ -20,7 +20,7 @@ type ArduinoDevice = {
   ProductID: string;
 };
 
-type ArduinoDeviceList = { [key: string]: ArduinoDevice };
+export type ArduinoDeviceList = { [key: string]: ArduinoDevice };
 
 /** Reference to the current socket instance. */
 let socket: ReturnType<typeof io> | null = null;
@@ -138,14 +138,16 @@ export function useArduinoCreateAgent({
   readDelimiter = "",
 }: UseArduinoOptions): UseArduinoResult {
   const [connectedDevice, setConnectedDevice] = useState<string | null>(null);
+  const status = connectedDevice ? "connected" : "disconnected";
 
   // Fetches a list of available Arduino devices from the Arduino Create Agent.
   // If an existing connection to the Agent is not available, a new one is
   // created. A null value is returned if a connection to the Agent could not
   // successfully be made.
   const fetchDevices = async (): Promise<ArduinoDeviceList | null> => {
-    // Only allow connection on the client side
-    if (!socket && typeof window === "undefined") return null;
+    // Only allow connection on the client side and ignore if already connected
+    // to a device
+    if (typeof window === "undefined" || status === "connected") return null;
 
     // Connects to the Arduino Create Agent and fetches the current device list.
     const connectAgent = async (): Promise<void> => {
@@ -233,12 +235,16 @@ export function useArduinoCreateAgent({
 
     const devices: ArduinoDeviceList = Object.create(null);
     messages.forEach((message) => {
-      const data = JSON.parse(message);
-      if (data.Ports) {
-        const list = data.Ports as ArduinoDevice[];
-        list.forEach((device) => {
-          devices[device.Name] = device;
-        });
+      try {
+        const data = JSON.parse(message);
+        if (data.Ports) {
+          const list = data.Ports as ArduinoDevice[];
+          list.forEach((device) => {
+            devices[device.Name] = device;
+          });
+        }
+      } catch (err) {
+        console.log("Error parsing device list:", err, message);
       }
     });
 
@@ -250,49 +256,55 @@ export function useArduinoCreateAgent({
     device: ArduinoDevice,
     baudRate: number
   ): Promise<void> => {
-    if (!socket) return;
+    if (!socket || status === "connected") return;
 
     let readData = "";
     _currentCallback = (message: string): void => {
       if (message.charAt(2) !== "D" || !onRead) return;
 
       // Parse message
-      const response = JSON.parse(message);
-      const value = response.D as string;
+      try {
+        const response = JSON.parse(message);
+        const value = response.D as string;
 
-      if (readDelimiter === "") {
-        // Call `onRead()` immediately if not delimiter was provided
-        onRead(value);
-      } else {
-        // Split out the new read value based on the delimeter
-        const parsedStrings = value.split(readDelimiter);
-        if (parsedStrings.length === 1) {
-          // Append the new read data if the delimiter was not found
-          readData += value;
+        if (readDelimiter === "") {
+          // Call `onRead()` immediately if not delimiter was provided
+          onRead(value);
         } else {
-          // Call `onRead()` with the appended data from the first split
-          onRead(readData + parsedStrings.shift());
+          // Split out the new read value based on the delimeter
+          const parsedStrings = value.split(readDelimiter);
+          if (parsedStrings.length === 1) {
+            // Append the new read data if the delimiter was not found
+            readData += value;
+          } else {
+            // Call `onRead()` with the appended data from the first split
+            onRead(readData + parsedStrings.shift());
 
-          // Set readData to the last element
-          if (parsedStrings.length > 0) {
-            readData = parsedStrings.pop() || "";
+            // Set readData to the last element
+            if (parsedStrings.length > 0) {
+              readData = parsedStrings.pop() || "";
+            }
+
+            // Call `onRead()` callback on remaining string tokens
+            parsedStrings.forEach((parsedValue) => {
+              onRead(parsedValue);
+            });
           }
-
-          // Call `onRead()` callback on remaining string tokens
-          parsedStrings.forEach((parsedValue) => {
-            onRead(parsedValue);
-          });
         }
+      } catch (err) {
+        console.log("error parsing data", message);
       }
     };
+
     socket.emit("command", `open ${device.Name} ${baudRate}`);
 
     setConnectedDevice(device.Name);
   };
 
   const disconnect = async (): Promise<void> => {
-    if (!socket || !connectedDevice) return;
+    if (!socket || status === "disconnected") return;
 
+    _currentCallback = null;
     socket.emit("command", `close ${connectedDevice}`);
     setConnectedDevice(null);
   };
@@ -302,7 +314,7 @@ export function useArduinoCreateAgent({
   };
 
   return {
-    status: connectedDevice ? "connected" : "disconnected",
+    status,
     fetchDevices,
     connect,
     disconnect,

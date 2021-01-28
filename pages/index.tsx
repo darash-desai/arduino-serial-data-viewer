@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useRef } from "react";
+import React, { ReactElement, useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 
 import Card from "react-bootstrap/Card";
@@ -6,6 +6,8 @@ import Container from "react-bootstrap/Container";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import Button from "react-bootstrap/Button";
+import ButtonGroup from "react-bootstrap/ButtonGroup";
+import Dropdown from "react-bootstrap/Dropdown";
 import InputGroup from "react-bootstrap/InputGroup";
 import Table from "react-bootstrap/Table";
 
@@ -13,7 +15,11 @@ const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 import { exec } from "apexcharts";
 
 import { useThrottleFn } from "ahooks";
-import { useArduino } from "hooks/useArduino";
+import { useArduino, UseArduinoOptions } from "hooks/useArduino";
+import {
+  useArduinoCreateAgent,
+  ArduinoDeviceList,
+} from "hooks/useArduinoCreateAgent";
 import styles from "./index.module.scss";
 
 type DataSeries = { name?: string; data: { x: number; y: number }[] }[];
@@ -119,6 +125,11 @@ const CHART_OPTIONS = {
 
 const Index = (): ReactElement => {
   const serialData = useRef<string[]>([]);
+  const [protocol, setProtocol] = useState<"serial" | "agent" | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+  const [agentDevices, setAgentDevices] = useState<ArduinoDeviceList | null>(
+    null
+  );
 
   /** The current chart data. */
   const chartDataRef = useRef<DataSeries>([]);
@@ -169,24 +180,55 @@ const Index = (): ReactElement => {
           series: chartData,
         });
       } catch (error) {
-        console.log("Error parsing data:", error);
+        console.log("Error parsing JSON data:", jsonString);
       }
     },
     { wait: CHART_UPDATE_INTERVAL }
   );
 
-  const { connect, disconnect, status } = useArduino({
+  const options: UseArduinoOptions = {
     readDelimiter: "\n",
     onRead: (value) => {
       serialData.current.push(value);
       updateChartData(value, serialData.current.length - 1);
     },
-  });
+  };
+
+  const serialArduino = useArduino(options);
+  const agentArduino = useArduinoCreateAgent(options);
+
+  const status =
+    protocol === "agent" ? agentArduino.status : serialArduino.status;
+
+  // Determine whether the arduino devices are available through the web serial
+  // API or if we need to fall back to Arduino Create Agent.
+  useEffect(() => {
+    if (protocol === null) {
+      serialArduino.isAvailable().then(async (available) => {
+        if (available) {
+          setProtocol("serial");
+        } else {
+          const devices = await agentArduino.fetchDevices();
+
+          setProtocol("agent");
+          setAgentDevices(devices);
+        }
+      });
+    }
+  }, [serialArduino]);
+
+  // Handles when the user selects a specific device to connect to through the
+  // Arduino Create Agent
+  const handleDeviceSelected = (eventKey: string): void => {
+    setSelectedDevice(eventKey);
+  };
 
   const handleConnect = async (): Promise<void> => {
     if (status === "connected") return;
 
-    await connect(9600);
+    protocol === "serial"
+      ? await serialArduino.connect(9600)
+      : await agentArduino.connect(agentDevices[selectedDevice], 9600);
 
     // Clear the current data if there is any
     if (serialData.current.length > 0) {
@@ -202,7 +244,10 @@ const Index = (): ReactElement => {
 
   const handleDisconnect = (): void => {
     if (status === "disconnected") return;
-    disconnect();
+
+    protocol === "serial"
+      ? serialArduino.disconnect()
+      : agentArduino.disconnect();
 
     // Update chart data to include the full high resolution data set received
     // from the arduino, since real-time chart updates and data parsing are
@@ -230,7 +275,7 @@ const Index = (): ReactElement => {
           }
         });
       } catch (error) {
-        console.log("Error parsing JSON data:", error);
+        console.log("Error parsing JSON data:", jsonValue);
       }
     });
 
@@ -323,6 +368,34 @@ const Index = (): ReactElement => {
     setStatistics(dataStats);
   };
 
+  const connectButton =
+    protocol !== "agent" ? (
+      <Button onClick={handleConnect} disabled={protocol === null}>
+        Connect
+      </Button>
+    ) : (
+      <Dropdown as={ButtonGroup} onSelect={handleDeviceSelected}>
+        <Button onClick={handleConnect} disabled={selectedDevice === null}>
+          Connect
+        </Button>
+        <Dropdown.Toggle split id="agent-devices" />
+        <Dropdown.Menu>
+          {agentDevices &&
+            Object.keys(agentDevices).map((device) => (
+              <Dropdown.Item
+                key={device}
+                eventKey={device}
+                className={
+                  selectedDevice === device ? styles.selectedDevice : undefined
+                }
+              >
+                {device}
+              </Dropdown.Item>
+            ))}
+        </Dropdown.Menu>
+      </Dropdown>
+    );
+
   return (
     <Container className={styles.Index}>
       <Row>
@@ -359,7 +432,7 @@ const Index = (): ReactElement => {
                 </InputGroup.Text>
                 <InputGroup.Append>
                   {status === "disconnected" ? (
-                    <Button onClick={handleConnect}>Connect</Button>
+                    connectButton
                   ) : (
                     <Button onClick={handleDisconnect}>Disconnect</Button>
                   )}
