@@ -167,6 +167,8 @@ export function useArduino({
   };
 
   const isAvailable = async (): Promise<boolean> => {
+    return false;
+
     if (typeof navigator !== "undefined") {
       const ports = await navigator.serial.getPorts();
       return ports.length > 0;
