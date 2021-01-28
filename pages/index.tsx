@@ -1,6 +1,7 @@
 import React, { ReactElement, useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 
+import Alert from "react-bootstrap/Alert";
 import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
 import Col from "react-bootstrap/Col";
@@ -126,6 +127,7 @@ const CHART_OPTIONS = {
 const Index = (): ReactElement => {
   const serialData = useRef<string[]>([]);
   const [protocol, setProtocol] = useState<"serial" | "agent" | null>(null);
+  const [showAlert, setShowAlert] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [agentDevices, setAgentDevices] = useState<ArduinoDeviceList | null>(
     null
@@ -209,6 +211,12 @@ const Index = (): ReactElement => {
           setProtocol("serial");
         } else {
           const devices = await agentArduino.fetchDevices();
+
+          // Display alert if devices is null as this indicates that the
+          // Arduino Create Agent was unavailable.
+          if (devices === null) {
+            setShowAlert(true);
+          }
 
           setProtocol("agent");
           setAgentDevices(devices);
@@ -403,6 +411,32 @@ const Index = (): ReactElement => {
 
   return (
     <Container className={styles.Index}>
+      {showAlert && (
+        <Row>
+          <Col>
+            <Alert variant="warning">
+              Uh oh! Looks like you may need to{" "}
+              <Alert.Link
+                href="https://create.arduino.cc/getting-started/plugin/welcome"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                install
+              </Alert.Link>{" "}
+              or adjust the settings for Arduino Create Agent. For more
+              information, click{" "}
+              <Alert.Link
+                href="https://github.com/lyvewave/arduino-serial-data-viewer#arduino-create-agent"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                here
+              </Alert.Link>
+              .
+            </Alert>
+          </Col>
+        </Row>
+      )}
       <Row>
         <Col>
           <h1>Arduino Serial Data Viewer</h1>
