@@ -219,16 +219,21 @@ const Index = (): ReactElement => {
 
   // Handles when the user selects a specific device to connect to through the
   // Arduino Create Agent
-  const handleDeviceSelected = (eventKey: string): void => {
+  const handleDeviceSelected = (eventKey: string | null): void => {
+    if (eventKey === null) return;
     setSelectedDevice(eventKey);
   };
 
   const handleConnect = async (): Promise<void> => {
-    if (status === "connected") return;
+    if (status === "connected" || protocol === null) return;
 
-    protocol === "serial"
-      ? await serialArduino.connect(9600)
-      : await agentArduino.connect(agentDevices[selectedDevice], 9600);
+    if (protocol === "serial") {
+      await serialArduino.connect(9600);
+    } else if (agentDevices && selectedDevice) {
+      await agentArduino.connect(agentDevices[selectedDevice], 9600);
+    } else {
+      return;
+    }
 
     // Clear the current data if there is any
     if (serialData.current.length > 0) {
